@@ -3,8 +3,10 @@ package mine.domain
 import scala.collection.GenSet
 import scala.util.Random
 
-trait Board {
-  type Pos
+trait Topology[Pos] {
+
+  type P = Pos
+
   //Square indexes
   val indexes: GenSet[Pos]
 
@@ -22,13 +24,7 @@ trait Board {
   def chooseRandom(n: Int): GenSet[Pos] = Random.shuffle(indexes.toList).take(n).par.toSet
 }
 
-object Board {
-  type Aux[P] = Board {type Pos = P}
-}
-
-
-case class Squares(width: Int, height: Int) extends Board {
-  override type Pos = (Int, Int)
+case class Squares(width: Int, height: Int) extends Topology[(Int, Int)] {
 
   override val indexes = {
     for {
@@ -37,7 +33,7 @@ case class Squares(width: Int, height: Int) extends Board {
     } yield (x, y)
   }.par.toSet
 
-  override def surrounding(pos: Pos) = {
+  override def surrounding(pos: (Int, Int)) = {
     val (centreX, centreY) = pos
     for {
       x <- centreX - 1 to centreX + 1
@@ -50,7 +46,7 @@ case class Squares(width: Int, height: Int) extends Board {
     } yield (x, y)
   }.par.toSet
 
-  override def adjacent(a: Pos, b: Pos) = {
+  override def adjacent(a: (Int, Int), b: (Int, Int)) = {
     val (ax, ay) = a
     val (bx, by) = b
 

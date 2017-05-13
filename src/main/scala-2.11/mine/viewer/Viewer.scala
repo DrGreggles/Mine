@@ -1,37 +1,37 @@
 package mine.viewer
 
 import cats.Foldable
-import mine.domain.Game
+import mine.domain.{Board, Squares, Topology}
 import cats.implicits._
 
 import scala.Console._
 
-trait Viewer[Pos] {
-  def print(game: Game[Pos]): Unit
+trait Viewer[Pos, T<: Topology[Pos]] {
+  def print(game: Board[Pos, T]): Unit
 }
 
 object Viewer {
 
-
-  implicit val squareViewer = new Viewer[(Int, Int)] {
+  implicit def squareViewer(implicit squares: Squares) = new Viewer[(Int, Int), Squares] {
 
     val colours = Map(
-      1 -> BLUE,
-      2 -> GREEN,
-      3 -> RED,
-      4 -> WHITE,
-      5 -> YELLOW,
-      6 -> CYAN,
-      7 -> BLACK,
-      8 -> MAGENTA
+      (1, BLUE),
+      (2, GREEN),
+      (3, RED),
+      (4, WHITE),
+      (5, YELLOW),
+      (6, CYAN),
+      (7, BLACK),
+      (8, MAGENTA)
     )
 
     case class Square(masked: Boolean, mine: Boolean, number: Int)
 
-    override def print(game: Game[(Int, Int)]) = {
+    override def print(game: Board[(Int, Int), Squares]) = {
 
-      val xs = game.board.indexes.map(_._1)
-      val ys = game.board.indexes.map(_._2)
+
+      val xs = squares.indexes.map(_._1)
+      val ys = squares.indexes.map(_._2)
 
       val minX = xs.min
       val maxX = xs.max
@@ -53,7 +53,7 @@ object Viewer {
       lazy val rows: IndexedSeq[List[Square]] =
         for (y <- minY until maxY) yield {
           for (x <- minX until maxX)
-            yield Square(game.isHidden(x, y), game.isClickedMine(x, y), game.number(x, y))
+            yield Square(game.isHidden(x, y), game isClickedMine(x, y), game number(x, y))
         }.toList
 
       println(topBorder(width))
