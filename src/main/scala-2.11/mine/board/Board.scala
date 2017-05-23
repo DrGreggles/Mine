@@ -1,9 +1,12 @@
-package mine.domain
+package mine.board
+
+import mine.board.topology.{Cylendar, Squares, Topology, Torus}
 
 import scala.annotation.tailrec
 
-case class Board[Pos, T<:Topology[Pos]]
-(mask: Pos => Boolean, private val mines: Pos => Boolean, blasted: Boolean = false)
+case class Board[Pos, T<:Topology[Pos]](mask: Pos => Boolean,
+                                        private val mines: Pos => Boolean,
+                                        blasted: Boolean = false)
 (implicit val topology: T) {
 
   def click(clicked: Pos): Board[Pos, T] =
@@ -36,7 +39,7 @@ case class Board[Pos, T<:Topology[Pos]]
         squaresToRemove((next.tail ++ surrounding) -- newPrevious, newPrevious)
     }
 
-  def number(pos: Pos) = topology.surrounding(pos) count isMine
+  def number(pos: Pos) = topology.surrounding(pos) count isMine //TODO: private with safe option method
 
   def complete = !topology.indexes.exists(p => isHidden(p) && !isMine(p))
 
@@ -62,5 +65,9 @@ object Board {
   def intermediate = Board[(Int, Int), Squares](40)(Squares(16, 16))
 
   def expert = Board[(Int, Int), Squares](99)(Squares(30, 16))
+
+  def expertCylendar = Board[(Int, Int), Cylendar](99)(Cylendar(30, 16))
+
+  def expertTorus = Board[(Int, Int), Torus](99)(Torus(30, 16))
 
 }

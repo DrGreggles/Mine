@@ -1,6 +1,7 @@
 package mine
 
-import mine.domain.{Board, Topology}
+import mine.board.Board
+import mine.board.topology.Topology
 import mine.viewer.Viewer
 
 import scala.annotation.tailrec
@@ -10,16 +11,17 @@ import scala.util.Random
 
 trait Solver {
 
+  def render[Pos, T<: Topology[Pos]](board: Board[Pos, T])(implicit viewer: Viewer[Pos])
 
   final def solveThen[Pos, T<: Topology[Pos]](initialGame: Board[Pos, T])
                           (win: => Unit)
-                          (lose: => Unit)(implicit viewer: Viewer[Pos, T]): Unit = {
+                          (lose: => Unit)(implicit viewer: Viewer[Pos]): Unit = {
 
     @tailrec
     def solve(board: Board[Pos, T])(decipheredMines: GenSet[Pos] = ParSet.empty, notMines: GenSet[Pos] = ParSet.empty): Unit = {
       import board._
 
-      viewer print board
+      render(board)
 
       if (board.blasted) lose
       else if (complete) win
@@ -49,13 +51,13 @@ trait Solver {
 
         def knowMinesNextTo(p: Pos): Boolean = minesIn(topology.surrounding(p)) >= number(p)
 
-        def hiddenNextToSameAsNumber(p: Pos) = hiddenIn(topology.surrounding(p)) == number(p)
+        def allSurroundingHiddenAreMines(p: Pos) = hiddenIn(topology.surrounding(p)) == number(p)
 
 
         lazy val newMines = for {
           p <- topology.indexes
           if !isHidden(p)
-          if hiddenNextToSameAsNumber(p)
+          if allSurroundingHiddenAreMines(p)
           minePos <- topology.surrounding(p)
           if isHidden(minePos)
         } yield minePos
