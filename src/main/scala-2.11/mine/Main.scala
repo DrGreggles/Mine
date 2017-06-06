@@ -1,15 +1,10 @@
 package mine
 
-import java.awt.geom.{Line2D, Point2D, Rectangle2D}
-import javax.swing.WindowConstants
-
 import akka.actor.{ActorRef, ActorSystem, Props}
 import mine.actor.{RendererActor, Solve, SolverActor}
-import mine.board.Board
+import mine.board.BoardFactory
+import mine.viewer.Renderer
 import mine.viewer.Viewer._
-
-import scala.swing._
-import scala.swing.event.MouseClicked
 
 
 
@@ -21,7 +16,9 @@ object Main extends App with Sweeper {
   implicit val system = ActorSystem()
 
   val rendererActor = system.actorOf(Props(new RendererActor(window)), name = "renderer")
-  val solverActor = system.actorOf(Props(new SolverActor(rendererActor)), name = "solver")
+  val solverActor = system.actorOf(Props(new SolverActor), name = "solver")
+  implicit val renderer = new Renderer(rendererActor)
+  val boardFactory = new BoardFactory
 
 }
 
@@ -29,14 +26,12 @@ trait Sweeper {
 
   val solverActor: ActorRef
 
-  def newBoard = Board.expertTorus
+  val boardFactory: BoardFactory
 
-  val board = newBoard
-  implicit val topology = board.topology
+  def newBoard = boardFactory.smallCube
 
-  def solve(attempts: Int) = {
+  def solve(attempts: Int): Unit = {
     solverActor ! Solve(attempts, () => newBoard)
   }
-
 
 }

@@ -22,4 +22,6 @@ trait Topology[Pos] {
   def isPresent(pos: Pos) = indexes contains pos
 
   def chooseRandom(n: Int): GenSet[Pos] = Random.shuffle(indexes.toList).take(n).par.toSet
+
+  def maxDimensions: Seq[Int]
 }

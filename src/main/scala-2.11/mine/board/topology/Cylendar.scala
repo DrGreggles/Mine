@@ -30,4 +30,5 @@ case class Cylendar(width: Int, height: Int) extends Topology[(Int, Int)] {
   }
 
   override val size = width * height
+  override val maxDimensions = Seq(width, height)
 }

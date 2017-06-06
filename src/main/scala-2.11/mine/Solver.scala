@@ -11,17 +11,13 @@ import scala.util.Random
 
 trait Solver {
 
-  def render[Pos, T<: Topology[Pos]](board: Board[Pos, T])(implicit viewer: Viewer[Pos])
-
   final def solveThen[Pos, T<: Topology[Pos]](initialGame: Board[Pos, T])
                           (win: => Unit)
-                          (lose: => Unit)(implicit viewer: Viewer[Pos]): Unit = {
+                          (lose: => Unit): Unit = {
 
     @tailrec
     def solve(board: Board[Pos, T])(decipheredMines: GenSet[Pos] = ParSet.empty, notMines: GenSet[Pos] = ParSet.empty): Unit = {
       import board._
-
-      render(board)
 
       if (board.blasted) lose
       else if (complete) win

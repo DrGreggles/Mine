@@ -1,25 +1,29 @@
 package mine.board
 
-import mine.board.topology.{Cylendar, Squares, Topology, Torus}
+import mine.board.topology.Topology
+import mine.viewer.{Renderer, Viewer}
 
 import scala.annotation.tailrec
 
-case class Board[Pos, T<:Topology[Pos]](mask: Pos => Boolean,
-                                        private val mines: Pos => Boolean,
-                                        blasted: Boolean = false)
-(implicit val topology: T) {
+case class Board[Pos, T <: Topology[Pos]](mask: Pos => Boolean,
+                                          private val mines: Pos => Boolean,
+                                          blasted: Boolean = false
+                                         )(implicit val topology: T, viewer: Viewer[Pos], renderer: Renderer) {
+
+  def init() = renderer.render(viewer.init)
 
   def click(clicked: Pos): Board[Pos, T] =
     if (!isHidden(clicked)) this
-    else if (isMine(clicked))
-      Board[Pos, T](
-        mask = (_:Pos) => true,
-        mines = mines,
-        blasted = true
-      )
+    else if (isMine(clicked)) {
+      renderer.render(viewer.blasted(clicked, topology.indexes filter mines))
+      this.copy(mask = _ => true, blasted = true)
+    }
     else {
       val unmasked = squaresToRemove(Set(clicked))
 
+      renderer.render(viewer.clicked(
+        unmasked map (pos => (pos, number(pos)))
+      ))
       this.copy(mask = pos => isHidden(pos) && !(unmasked contains pos))
     }
 
@@ -51,23 +55,19 @@ case class Board[Pos, T<:Topology[Pos]](mask: Pos => Boolean,
 }
 
 object Board {
-  def apply[Pos, T<:Topology[Pos]](mines: Int)(implicit topology: T): Board[topology.P, T] = {
 
-    new Board[topology.P, T](
+  def apply[Pos, T <: Topology[Pos]](topology: T, mines: Int)(implicit viewer: Viewer[Pos], renderer: Renderer): Board[topology.P, T] = {
+
+    implicit val t = topology
+
+    val board = new Board[topology.P, T](
       mask = _ => true,
       mines = topology.chooseRandom(mines).contains,
       blasted = false
-    )(topology)
+    )
+
+    board.init()
+
+    board
   }
-
-  def beginner = Board[(Int, Int), Squares](10)(Squares(8, 8))
-
-  def intermediate = Board[(Int, Int), Squares](40)(Squares(16, 16))
-
-  def expert = Board[(Int, Int), Squares](99)(Squares(30, 16))
-
-  def expertCylendar = Board[(Int, Int), Cylendar](99)(Cylendar(30, 16))
-
-  def expertTorus = Board[(Int, Int), Torus](99)(Torus(30, 16))
-
 }

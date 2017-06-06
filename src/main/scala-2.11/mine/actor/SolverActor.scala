@@ -6,15 +6,12 @@ import mine.board.Board
 import mine.board.topology.Topology
 import mine.viewer.Viewer
 
-class SolverActor(renderer: ActorRef) extends Actor with Solver {
+class SolverActor extends Actor with Solver {
 
   def receive = {
     case s@Solve(attempts, newBoard) => play(newBoard, attempts)(s.viewer)
     case _ =>
   }
-
-  override def render[Pos, T <: Topology[Pos]](board: Board[Pos, T])(implicit viewer: Viewer[Pos]) =
-    renderer ! Render(board, viewer)
 
   private def play[Pos, T <: Topology[Pos]](newBoard: () => Board[Pos, T], maxAttempts: Int, attempt: Int = 1)(implicit viewer: Viewer[Pos]): Unit = {
 
