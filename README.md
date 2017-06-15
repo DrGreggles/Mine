@@ -11,7 +11,7 @@ Current topologies:
 
 The main observation is that all we need to define minesweeper is some set of indexes and a notion of "is next to" (essentially, a topology).
 
-Here we have a generic solver that solves board independent of which topology we choose.
+Here we have a generic solver that solves boards independent of which topology we choose.
 
 Coming soon...
 * More topologies (Mobius strip, Klein bottle, etc...)
