@@ -1,6 +1,7 @@
 package mine.actor
 
 import akka.actor.Actor
+import mine.board.topology.Topology
 import mine.ui.Window
 import mine.viewer.WindowItem
 
@@ -15,3 +16,4 @@ class RendererActor(window: Window) extends Actor {
 
 }
 
+case class Render[Pos, T<:Topology[Pos]](items: GenSet[WindowItem])

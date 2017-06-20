@@ -55,7 +55,6 @@ class Window(solve: => Unit) extends MainFrame {
       case Box(x, y, ClickedMine, _) =>
         g.drawImage(unclickedBox, x * 16, y * 16, Color.BLACK, null)
       case WindowDimensions(x, y) =>
-        println(s"X:${x*16}, Y:${y*16}")
         setMainPanelSize(x * 16, y * 16)
     }
   }

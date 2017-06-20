@@ -11,100 +11,89 @@ import scala.util.Random
 
 trait Solver {
 
-  final def solveThen[Pos, T<: Topology[Pos]](initialGame: Board[Pos, T])
-                          (win: => Unit)
-                          (lose: => Unit): Unit = {
+  @tailrec
+  final def solve[Pos, T <: Topology[Pos]](board: Board[Pos, T], known: Known[Pos]): Known[Pos] = {
+    import board._
 
-    @tailrec
-    def solve(board: Board[Pos, T])(decipheredMines: GenSet[Pos] = ParSet.empty, notMines: GenSet[Pos] = ParSet.empty): Unit = {
-      import board._
+    val Known(knownMines, notMines) = known
 
-      if (board.blasted) lose
-      else if (complete) win
-      else if (notMines.nonEmpty) {
-        val hidden = notMines filter isHidden
-        hidden.headOption match {
-          case Some(pos) =>
-            solve(click(pos))(decipheredMines, hidden.tail)
-          case _ =>
-            solve(board)(decipheredMines, hidden)
-        }
-      } else {
-        def randomPos: Pos = {
-          val maybeNotMines = for {
-            p <- topology.indexes
-            if isHidden(p)
-            if !(decipheredMines contains p)
-          } yield p
+    if (notMines.nonEmpty) {
+      val hiddenNonMines = notMines filter isHidden
 
-          val n = Random.nextInt(maybeNotMines.size)
-          maybeNotMines.iterator.drop(n).next
-        }
+      if (hiddenNonMines.nonEmpty)
+        Known(knownMines, hiddenNonMines)
+      else
+        solve(board, Known(knownMines, hiddenNonMines))
 
-        def minesIn(set: GenSet[Pos]): Int = (set intersect decipheredMines).size
+    } else {
 
-        def hiddenIn(next: GenSet[Pos]): Int = next count isHidden
+      def minesIn(set: GenSet[Pos]): Int = (set intersect knownMines).size
 
-        def knowMinesNextTo(p: Pos): Boolean = minesIn(topology.surrounding(p)) >= number(p)
+      def hiddenIn(next: GenSet[Pos]): Int = next count isHidden
 
-        def allSurroundingHiddenAreMines(p: Pos) = hiddenIn(topology.surrounding(p)) == number(p)
+      def knowMinesNextTo(p: Pos): Boolean = minesIn(topology.surrounding(p)) >= number(p)
+
+      def allSurroundingHiddenAreMines(p: Pos) = hiddenIn(topology.surrounding(p)) == number(p)
 
 
-        lazy val newMines = for {
-          p <- topology.indexes
-          if !isHidden(p)
-          if allSurroundingHiddenAreMines(p)
-          minePos <- topology.surrounding(p)
-          if isHidden(minePos)
-        } yield minePos
+      lazy val newMines = for {
+        p <- topology.indexes
+        if !isHidden(p)
+        if allSurroundingHiddenAreMines(p)
+        minePos <- topology.surrounding(p)
+        if isHidden(minePos)
+      } yield minePos
 
-        val newNotMines = for {
-          p <- topology.indexes
-          if !isHidden(p)
-          if number(p) > 0
-          if knowMinesNextTo(p)
-          (adjPos) <- topology.surrounding(p)
-          if isHidden(adjPos)
-          if !(decipheredMines contains adjPos)
-        } yield adjPos
+      val newNotMines = for {
+        p <- topology.indexes
+        if !isHidden(p)
+        if number(p) > 0
+        if knowMinesNextTo(p)
+        (adjPos) <- topology.surrounding(p)
+        if isHidden(adjPos)
+        if !(knownMines contains adjPos)
+      } yield adjPos
 
-        def containsMines(nearPos: Pos) = {
-          val near = topology.surrounding(nearPos) flatMap {
-            p => topology.surrounding(p)
-          }
-
-          for {
-            p <- near
-            if !isHidden(p)
-            n = number(p)
-            if n > 0
-          } yield (topology.surrounding(p) filter isHidden, n, p)
+      def containsMines(nearPos: Pos) = {
+        val near = topology.surrounding(nearPos) flatMap {
+          p => topology.surrounding(p)
         }
 
-        lazy val alsoNotMines = for {
-          p <- topology.indexes
+        for {
+          p <- near
           if !isHidden(p)
-          num = number(p)
-          (hasMines, n, pos) <- containsMines(p)
-          if p != pos
-          intersection = hasMines intersect topology.surrounding(p)
-          if n - (hasMines.size - intersection.size) >= num
-          adj <- topology.surrounding(p) diff intersection
-          if isHidden(adj)
-        } yield adj
-
-        if (newNotMines.nonEmpty)
-          solve(board)(decipheredMines, newNotMines)
-        else if (alsoNotMines.nonEmpty)
-          solve(board)(decipheredMines, alsoNotMines)
-        else if (newMines.size > decipheredMines.size)
-          solve(board)(newMines)
-        else
-          solve(click(randomPos))(newMines)
-
+          n = number(p)
+          if n > 0
+        } yield (topology.surrounding(p) filter isHidden, n, p)
       }
-    }
 
-    solve(initialGame)()
+      lazy val alsoNotMines = for {
+        p <- topology.indexes
+        if !isHidden(p)
+        num = number(p)
+        (hasMines, n, pos) <- containsMines(p)
+        if p != pos
+        intersection = hasMines intersect topology.surrounding(p)
+        if n - (hasMines.size - intersection.size) >= num
+        adj <- topology.surrounding(p) diff intersection
+        if isHidden(adj)
+      } yield adj
+
+      if (newNotMines.nonEmpty)
+        solve(board, Known(knownMines, newNotMines))
+      else if (alsoNotMines.nonEmpty)
+        solve(board, Known(knownMines, alsoNotMines))
+      else if (newMines.size > knownMines.size)
+        solve(board, known.copy(mines = newMines))
+      else
+        known.copy(mines = newMines)
+
+    }
   }
+}
+
+case class Known[Pos](mines: GenSet[Pos], notMines: GenSet[Pos])
+
+object Known {
+  def nothing[Pos] = Known(ParSet.empty[Pos], ParSet.empty[Pos])
 }

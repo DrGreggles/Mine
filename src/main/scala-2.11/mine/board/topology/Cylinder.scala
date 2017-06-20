@@ -1,6 +1,6 @@
 package mine.board.topology
 
-case class Cylendar(width: Int, height: Int) extends Topology[(Int, Int)] {
+case class Cylinder(width: Int, height: Int) extends Topology[(Int, Int)] {
 
   override val indexes = {
     for {

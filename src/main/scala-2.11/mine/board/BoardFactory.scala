@@ -1,6 +1,6 @@
 package mine.board
 
-import mine.board.topology.{Cylendar, Hypercube, Squares, Torus}
+import mine.board.topology.{Cylinder, Hypercube, Squares, Torus}
 import mine.viewer.Renderer
 
 class BoardFactory(implicit renderer: Renderer) {
@@ -11,7 +11,7 @@ class BoardFactory(implicit renderer: Renderer) {
 
   def expert = Board[(Int, Int), Squares](Squares(30, 16), mines = 99)
 
-  def expertCylendar = Board[(Int, Int), Cylendar](Cylendar(30, 16), mines = 99)
+  def expertCylinder = Board[(Int, Int), Cylinder](Cylinder(30, 16), mines = 99)
 
   def expertTorus = Board[(Int, Int), Torus](Torus(30, 16), mines = 99)
 

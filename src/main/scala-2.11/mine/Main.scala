@@ -28,7 +28,7 @@ trait Sweeper {
 
   val boardFactory: BoardFactory
 
-  def newBoard = boardFactory.smallCube
+  def newBoard = boardFactory.smallTesseract
 
   def solve(attempts: Int): Unit = {
     solverActor ! Solve(attempts, () => newBoard)
