@@ -1,6 +1,8 @@
 package mine.board.topology
 
-case class Squares(width: Int, height: Int) extends Topology[(Int, Int)] {
+case class Squares(width: Int, height: Int) extends Topology {
+
+  type Pos = (Int, Int)
 
   override val indexes = {
     for {
@@ -9,7 +11,7 @@ case class Squares(width: Int, height: Int) extends Topology[(Int, Int)] {
     } yield (x, y)
   }.par.toSet
 
-  override def surrounding(pos: (Int, Int)) = {
+  override def surrounding(pos: Pos) = {
     val (centreX, centreY) = pos
     for {
       x <- centreX - 1 to centreX + 1
@@ -22,7 +24,7 @@ case class Squares(width: Int, height: Int) extends Topology[(Int, Int)] {
     } yield (x, y)
   }.par.toSet
 
-  override def adjacent(a: (Int, Int), b: (Int, Int)) = {
+  override def adjacent(a: Pos, b: Pos) = {
     val (ax, ay) = a
     val (bx, by) = b
 

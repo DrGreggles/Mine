@@ -1,7 +1,9 @@
 package mine.board.topology
 
 
-case class Hypercube(dimensions: Int*) extends Topology[List[Int]] {
+case class Hypercube(dimensions: Int*) extends Topology {
+
+  type Pos = List[Int]
 
   override val indexes = (dimensions foldLeft Set(List.empty[Int])) { (accum, dimension) =>
     accum flatMap { vector =>
@@ -9,7 +11,7 @@ case class Hypercube(dimensions: Int*) extends Topology[List[Int]] {
     }
   }.par
 
-  override def surrounding(pos: List[Int]) = {
+  override def surrounding(pos: Pos) = {
 
     val coordRanges = pos.zipWithIndex map { case (x, i) =>
       Math.max(x - 1, 0) to Math.min(x + 1, dimensions(i) - 1)
@@ -29,7 +31,7 @@ case class Hypercube(dimensions: Int*) extends Topology[List[Int]] {
     math.abs(a - b) <= 1
   }
 
-  override def adjacent(a: List[Int], b: List[Int]) = {
+  override def adjacent(a: Pos, b: Pos) = {
     ((a zip b) foldLeft true) (_ && adjacentPair(_))
   }
 

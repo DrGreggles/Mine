@@ -3,9 +3,9 @@ package mine.board.topology
 import scala.collection.GenSet
 import scala.util.Random
 
-trait Topology[Pos] {
+trait Topology {
 
-  type P = Pos
+  type Pos
 
   //Square indexes
   val indexes: GenSet[Pos]
@@ -24,4 +24,8 @@ trait Topology[Pos] {
   def chooseRandom(n: Int): GenSet[Pos] = Random.shuffle(indexes.toList).take(n).par.toSet
 
   def maxDimensions: Seq[Int]
+}
+
+object Topology {
+  type Aux[P] = Topology {type Pos = P}
 }

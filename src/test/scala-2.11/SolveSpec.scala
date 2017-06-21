@@ -23,8 +23,6 @@ object SolveSpec extends Properties("Solver") with BoardGen {
 
 trait BoardGen {
 
-  type AnyBoard = Board[(Topology[_])#P, Topology[_]]
-
   implicit val squaresGen = for {
     x <- Gen.chooseNum(1, 10)
     y <- Gen.chooseNum(1, 10)
@@ -46,7 +44,7 @@ trait BoardGen {
   } yield Hypercube(dimensions)
 
 
-  val topologyGen: Gen[Topology[_]] = oneOf(squaresGen, cylinderGen, torusGen, hypercubeGen)
+  val topologyGen: Gen[Topology] = oneOf(squaresGen, cylinderGen, torusGen, hypercubeGen)
 
   val boardGen = for {
     topology <- topologyGen

@@ -16,4 +16,4 @@ class RendererActor(window: Window) extends Actor {
 
 }
 
-case class Render[Pos, T<:Topology[Pos]](items: GenSet[WindowItem])
+case class Render[Pos, T<:Topology.Aux[Pos]](items: GenSet[WindowItem])

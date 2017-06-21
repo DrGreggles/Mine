@@ -16,7 +16,7 @@ class SolverActor extends Actor with Solver {
     case _ =>
   }
 
-  private def play[Pos, T <: Topology[Pos]](newBoard: () => Board[Pos, T], maxAttempts: Int, attempt: Int = 1)(implicit viewer: Viewer[Pos]): Unit = {
+  private def play[Pos](newBoard: () => Board[Pos], maxAttempts: Int, attempt: Int = 1)(implicit viewer: Viewer[Pos]): Unit = {
 
     val board = newBoard()
 
@@ -35,7 +35,7 @@ class SolverActor extends Actor with Solver {
       else println(s"Did not win after $maxAttempts attempts.")
     }
 
-    def move(b: Board[Pos, T], known: Known[Pos]): Unit = {
+    def move(b: Board[Pos], known: Known[Pos]): Unit = {
 
       val Known(mines, notMines) = known
 
@@ -67,4 +67,4 @@ class SolverActor extends Actor with Solver {
 
 }
 
-case class Solve[Pos, T <: Topology[Pos]](attempts: Int, newBoard: () => Board[Pos, T])(implicit val viewer: Viewer[Pos])
+case class Solve[Pos](attempts: Int, newBoard: () => Board[Pos])(implicit val viewer: Viewer[Pos])

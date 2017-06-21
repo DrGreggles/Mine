@@ -12,7 +12,7 @@ import scala.util.Random
 trait Solver {
 
   @tailrec
-  final def solve[Pos, T <: Topology[Pos]](board: Board[Pos, T], known: Known[Pos]): Known[Pos] = {
+  final def solve[Pos](board: Board[Pos], known: Known[Pos]): Known[Pos] = {
     import board._
 
     val Known(knownMines, notMines) = known

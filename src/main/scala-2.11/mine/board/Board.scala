@@ -5,18 +5,26 @@ import mine.viewer.{Renderer, Viewer}
 
 import scala.annotation.tailrec
 
-case class Board[Pos, T <: Topology[Pos]](mask: Pos => Boolean,
-                                          private val mines: Pos => Boolean,
-                                          blasted: Boolean = false
-                                         )(implicit val topology: T, viewer: Viewer[Pos], renderer: Renderer) {
+class Board[Pos] private(val topology: Topology.Aux[Pos])
+                   (mask: Pos => Boolean,
+                    mines: Pos => Boolean,
+                    val blasted: Boolean = false
+                   )(implicit viewer: Viewer[Pos], renderer: Renderer) {
+
+  implicit val t = topology
 
   def init() = renderer.render(viewer.init)
 
-  def click(clicked: Pos): Board[Pos, T] =
+  def click(clicked: Pos): Board[Pos] =
     if (!isHidden(clicked)) this
     else if (isMine(clicked)) {
       renderer.render(viewer.blasted(clicked, topology.indexes filter mines))
-      this.copy(mask = _ => true, blasted = true)
+
+      new Board[Pos](topology)(
+        mask = _ => true,
+        mines = mines,
+        blasted = true
+      )
     }
     else {
       val unmasked = squaresToRemove(Set(clicked))
@@ -24,7 +32,11 @@ case class Board[Pos, T <: Topology[Pos]](mask: Pos => Boolean,
       renderer.render(viewer.clicked(
         unmasked map (pos => (pos, number(pos)))
       ))
-      this.copy(mask = pos => isHidden(pos) && !(unmasked contains pos))
+      new Board(topology)(
+        mask = pos => isHidden(pos) && !(unmasked contains pos),
+        mines = mines,
+        blasted = blasted
+      )
     }
 
   @tailrec
@@ -56,11 +68,9 @@ case class Board[Pos, T <: Topology[Pos]](mask: Pos => Boolean,
 
 object Board {
 
-  def apply[Pos, T <: Topology[Pos]](topology: T, mines: Int)(implicit viewer: Viewer[Pos], renderer: Renderer): Board[topology.P, T] = {
+  def apply[Pos](topology: Topology.Aux[Pos], mines: Int)(implicit viewer: Viewer[Pos], renderer: Renderer): Board[Pos] = {
 
-    implicit val t = topology
-
-    val board = new Board[topology.P, T](
+    val board = new Board(topology)(
       mask = _ => true,
       mines = topology.chooseRandom(mines).contains,
       blasted = false

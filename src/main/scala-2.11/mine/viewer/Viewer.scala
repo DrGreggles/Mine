@@ -6,25 +6,25 @@ import scala.collection.GenSet
 
 abstract class Viewer[Pos] {
 
-  protected def posToCoord(pos: Pos)(implicit topology: Topology[Pos]): (Int, Int)
+  protected def posToCoord(pos: Pos)(implicit topology: Topology.Aux[Pos]): (Int, Int)
 
-  def init(implicit topology: Topology[Pos]): GenSet[_ <: WindowItem] = {
+  def init(implicit topology: Topology.Aux[Pos]): GenSet[_ <: WindowItem] = {
     val boxes = topology.indexes.toList map boxFromPos(Box.Unclicked)
     val dimensions = WindowDimensions(boxes.map(_.x).max + 1, boxes.map(_.y).max + 1)
     (dimensions :: boxes).toSet
   }
 
-  def clicked(clicked: GenSet[(Pos, Int)])(implicit topology: Topology[Pos]): GenSet[_ <: WindowItem] = clicked map {
+  def clicked(clicked: GenSet[(Pos, Int)])(implicit topology: Topology.Aux[Pos]): GenSet[_ <: WindowItem] = clicked map {
     case (pos, number) => boxFromPos(Box.Clicked, number)(pos)
   }
 
-  def blasted(clickedMine: Pos, mines: GenSet[Pos])(implicit topology: Topology[Pos]): GenSet[_ <: WindowItem] = {
+  def blasted(clickedMine: Pos, mines: GenSet[Pos])(implicit topology: Topology.Aux[Pos]): GenSet[_ <: WindowItem] = {
 
     val mineBoxes = (mines - clickedMine) map boxFromPos(Box.Mine)
     mineBoxes + boxFromPos(Box.Mine)(clickedMine)
   }
 
-  private def boxFromPos(state: Box.State, number: Int = 0)(pos: Pos)(implicit topology: Topology[Pos]): Box = {
+  private def boxFromPos(state: Box.State, number: Int = 0)(pos: Pos)(implicit topology: Topology.Aux[Pos]): Box = {
     val (x, y) = posToCoord(pos)
     Box(x, y, state, number)
   }
@@ -32,12 +32,14 @@ abstract class Viewer[Pos] {
 
 object Viewer {
 
-  implicit def twoDimensionalViewer = new Viewer[(Int, Int)] {
-    override def posToCoord(pos: (Int, Int))(implicit topology: Topology[(Int, Int)]): (Int, Int) = pos
+  def apply[Pos](toCoord: Pos => (Int, Int)) = new Viewer[Pos] {
+    override def posToCoord(pos: Pos)(implicit topology: Topology.Aux[Pos]): (Int, Int) = toCoord(pos)
   }
 
+  implicit def twoDimensionalViewer = Viewer(identity[(Int, Int)])
+
   implicit def nDimensionalViewer = new Viewer[List[Int]] {
-    override def posToCoord(pos: List[Int])(implicit topology: Topology[List[Int]]): (Int, Int) = {
+    override def posToCoord(pos: List[Int])(implicit topology: Topology.Aux[List[Int]]): (Int, Int) = {
 
       def dimensionOffset(currentX: Int,
                           currentY: Int,
